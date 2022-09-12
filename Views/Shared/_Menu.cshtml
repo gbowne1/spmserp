@@ -1,0 +1,318 @@
+<!-- Sidebar Menu -->
+@*<nav class="mt-2">*@
+
+<ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+    <!-- Add icons to the links using the .nav-icon class
+    with font-awesome or any other icon font library -->
+
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            @*<i class="nav-icon fas fa-tachometer-alt"></i>*@
+            <i class="nav-icon fas fa-users-cog"></i>
+            <p>
+                Admin
+                <i class="right fas fa-angle-left"></i>
+            </p>
+        </a>
+        <ul class="nav nav-treeview">
+            <li class="nav-item">
+                <a asp-area="Admin" asp-controller="User" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>User</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Admin" asp-controller="Role" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Role</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Admin" asp-controller="AssignRole" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>User Role</p>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i class="nav-icon fa fa-database"></i>
+            @*<i class="nav-icon fa fa-brain"></i>*@
+            <p>
+                Master
+                <i class="right fas fa-angle-left"></i>
+            </p>
+        </a>
+        <ul class="nav nav-treeview">
+            <li class="nav-item">
+                <a asp-area="Master" asp-controller="Company" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Company</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Master" asp-controller="Employee" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Employee</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Master" asp-controller="Country" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Country</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Master" asp-controller="State" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>State</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Master" asp-controller="City" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>City</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Master" asp-controller="Form" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Form</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Master" asp-controller="Designation" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Designation</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Master" asp-controller="Department" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Department</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Master" asp-controller="UnitOfMeasurement" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Unit Of Measurement</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Master" asp-controller="VoucherSetupDetail" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Voucher Setup Detail</p>
+                </a>
+            </li>
+        </ul>
+    </li>
+
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-book"></i>
+            @*<i class="nav-icon fas fa-coins"></i>*@
+            <p>
+                Account
+                <i class="right fas fa-angle-left"></i>
+            </p>
+        </a>
+        <ul class="nav nav-treeview">
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="Ledger" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Ledger</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="SalesInvoice" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Sales Invoice</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="PurchaseInvoice" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Purchase Invoice</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="CreditNote" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Credit Note</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="DebitNote" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Debit Note</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="PaymentVoucher" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Payment Voucher</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="ReceiptVoucher" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Receipt Voucher</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="JournalVoucher" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Journal Voucher</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="ContraVoucher" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Contra Voucher</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="AdvanceAdjustment" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Advance Adjustment</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="Currency" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Currency</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="CurrencyConversion" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Currency Conversion</p>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="FinancialYear" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Financial Year</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="TaxRegister" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Tax Register</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="OpeningBalanceTransfer" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Opening Balance Transfer</p>
+                </a>
+            </li>
+
+        </ul>
+    </li>
+
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-chart-bar"></i>
+            <p>
+                Report
+                <i class="right fas fa-angle-left"></i>
+            </p>
+        </a>
+        <ul class="nav nav-treeview">
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="GeneralLedger" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>General Ledger</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="PayableStatement" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Payable Statement</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="ReceivableStatement" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Receivable Statement</p>
+                </a>
+            </li>
+            @*<li class="nav-item">
+                <a asp-area="Accounts" asp-controller="BankStatement" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Bank Statement</p>
+                </a>
+            </li>*@
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="PurchaseRegister" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Purchase Register</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="SalesRegister" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p> Sales Register</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="PaymentRegister" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Payment Register</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="ReceiptRegister" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Receipt Register</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="JournalRegister" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Journal Register</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="ContraRegister" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Contra Register</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="TaxReport" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Tax Report</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="PDCReport" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>PDC Report</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="TrialBalanceReport" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Trial Balance</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="ProfitAndLossReport" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Profit & Loss</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-area="Accounts" asp-controller="BalanceSheetReport" asp-action="Index" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Balance Sheet</p>
+                </a>
+            </li>
+        </ul>
+
+    </li>
+</ul>

@@ -1,0 +1,8 @@
+/media/sdd1/Documents/spmserp/obj/Debug/net6.0/spmserp.csproj.AssemblyReference.cache
+/media/sdd1/Documents/spmserp/obj/Debug/net6.0/spmserp.GeneratedMSBuildEditorConfig.editorconfig
+/media/sdd1/Documents/spmserp/obj/Debug/net6.0/spmserp.AssemblyInfoInputs.cache
+/media/sdd1/Documents/spmserp/obj/Debug/net6.0/spmserp.AssemblyInfo.cs
+/media/sdd1/Documents/spmserp/obj/Debug/net6.0/spmserp.csproj.CoreCompileInputs.cache
+/media/sdd1/Documents/spmserp/obj/Debug/net6.0/spmserp.MvcApplicationPartsAssemblyInfo.cache
+/media/sdd1/Documents/spmserp/obj/Debug/net6.0/spmserp.RazorAssemblyInfo.cache
+/media/sdd1/Documents/spmserp/obj/Debug/net6.0/spmserp.RazorAssemblyInfo.cs
