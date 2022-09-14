@@ -8,6 +8,7 @@ namespace OnlineDataBuilder.Controllers
     [ApiController]
     public class DashboardController : BaseController
     {
+        
         private readonly IDashboardService _dashboardService;
         public DashboardController(IDashboardService dashboardService)
         {
