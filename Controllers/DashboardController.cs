@@ -24,4 +24,3 @@ namespace OnlineDataBuilder.Controllers
         }
     }
 }
-Footer
