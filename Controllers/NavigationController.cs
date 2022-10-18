@@ -57,20 +57,19 @@ namespace test6EntityFrame.Controllers
                                                     PrTable.EditPermission,
                                                     PrTable.viewPermission
                                                 })
-                                            )}
-                                        };
-                                    }
-
+                                   }
             };
-            return Ok(finalResult);
         }
+    }
+};
+                                    
+return Ok(finalResult);
+{
 
         // GET: api/Navigation/5
         public string Get(int id)
-        {
-            return "value";
-        }
+{
+    return "value";
+};
 
-
-    }
 }

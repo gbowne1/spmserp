@@ -1,15 +1,225 @@
+using AutoMapper;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Primitives;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json; // Not sure about adding Newton
+using spmserp.Data;
+using spmserp.Models;
 using System;
+using System.Collections.Specialized;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
+using System.Data.Entity.Validation;
+using System.Data.SqlClient;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Reflection;
+using System.Security.Claims;
+using System.ServiceModel.Syndication;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using System.Xml;
 
 namespace spmserp.Controllers
 {
+    [Authorize(Roles = "Admin, SuperUser")]
+    [Area("Admin")]
+    [ExceptionFilter]
+    [Authorize(Policy = "RequireAdministratorRole")]
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
+    [Route("api/[controller]")]
+    [RequireHttps]
+    [RoutePrefix("admin")]
+    [ApiController]
+
     public class AdminController : AdminBaseController
     {
+        #region 
+        private readonly IConfiguration _configuration;
+        private readonly ISysAdminService _adminService;
+        private readonly ILoggerHelper _logger;
+        private readonly ICache _cache;
+        private readonly IMapper _mapper;
+        private readonly ILogger<AdminController> _logger;
+        private readonly ApplicationDbContext _context;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IRoleService _roleService;
+        private readonly IStringLocalizer<AdminController> _stringLocalizer;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        #endregion
+        
+        private readonly IAdminService _adminService;
+        public AdminController(IAdminService adminService)
+        {
+            _adminService = adminService;
+        }
+        // GET: AdminController
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+        public ActionResult ConfirmOperation()
+        {
+            return View();
+        }
+
+        public ActionResult OperationFailed()
+        {
+            return View();
+        }
+        public ActionResult ListUsers()
+        {
+            var model = _adminService.ListAllUsers();
+            return View(model);
+        }
+
+        private readonly ILogger<AdminController> _logger;
+
+        public AdminController(ILogger<AdminController> logger)
+        {
+            _logger = logger;
+        }
+        
+        private readonly IHostingEnvironment hostingEnvironment;
+        
+        public AdminController(IHostingEnvironment environment)
+        {
+            hostingEnvironment = environment;
+        }
+
+        [HttpGet(Name = "IsAlive")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        
+        public ActionResult<int> IsAlive()
+        {
+            var response = "Admin API is in good health.";
+            _logger.LogInformation(response);
+            return Ok(response);
+        }
+
+        [HttpGet]
+        public ActionResult LogIn()
+        {
+            return View(new Admin());
+        }
+
+        [HttpPost]
+
+        public ActionResult LogIn(Admin admin)
+        {
+            if (_admin.CanLogin(admin))
+            {
+               Admin newAdmin=  _admin.Get(a=>a.UserName==admin.UserName);
+                AddCookie(newAdmin);
+                return RedirectToAction("Index", "Home");
+            }
+
+            ModelState.AddModelError("", ""); 
+            return View(admin);
+        }
+
+        private void AddCookie(Admin admin)
+        {
+
+            if ( string.IsNullOrEmpty(Request.Cookies["id"]))
+            {
+                CookieOptions options = new CookieOptions();
+                options.Expires = DateTime.Now.AddMinutes(40);
+               
+                Response.Cookies.Append("id",  admin.Id.ToString(), options);
+            }
+        }
+
+        public AdminController(UserManager<ApplicationUser> userManager, 
+            RoleManager<IdentityRole> roleManager, 
+            ApplicationDbContext context,
+            ICvStorageService cvStorageService,
+            ILogger<AdminController> logger, 
+            IStringLocalizer<AdminController> stringLocalizer, 
+            IMapper mapper)
+        {
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _context = context;
+            _cvStorageService = cvStorageService;
+            _logger = logger;
+            _stringLocalizer = stringLocalizer;
+            _mapper = mapper;
+        }
+
+        public AdminController(ILogger<AdminController> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        {
+            _logger = logger;
+            _context = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
+        }
+
+        public AdminController(RoleManager<IdentityRole> roleManager)
+        {
+            this.roleManager = roleManager;
+        }
+        public AdminController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager) {
+            _userManager = userManager;
+            _signInManager = signInManager;
+        }
+
+        private readonly IWebHostEnvironment _web;
+
+        // GET: AdminController
+       
+
+        public AdminController(IWebHostEnvironment web)
+        {
+            db = new spmsContext();
+        }
+        
+        // GET: AdminController
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+        // GET: AdminController/Details/5
+        public ActionResult Details(int id)
+        {
+            return View();
+        }
+        // GET: AdminController/createrole
+        public ActionResult CreateRole()
+        {
+            return View();
+        }
+
         // GET: Admin
+        private readonly ApplicationDbContext _dbContext;
+        private readonly IHostingEnvironment _hosting;
+
         public ActionResult AdminDashBoard(Admin model)
         {
             List<Admin> lst = new List<Admin>();
@@ -88,515 +298,30 @@ namespace spmserp.Controllers
         }
 
 
-        public ActionResult VendorListForAdmin()
+        [Plugin("AdminController", "0.0.1")]
+        public class AdminController
         {
-            Admin model = new Admin();
-            List<Admin> lst = new List<Admin>();
-            DataSet ds = model.GetVendorList();
-            if (ds != null && ds.Tables[0].Rows.Count > 0 && ds.Tables.Count > 0)
-            {
-                foreach (DataRow r in ds.Tables[0].Rows)
-                {
-                    Admin obj = new Admin();
-                    obj.FK_UserId = r["PK_UserId"].ToString();
-                    obj.LoginId = r["LoginId"].ToString();
-                    obj.Password = Crypto.Decrypt(r["Password"].ToString());
-                    obj.Name = r["Name"].ToString();
-                    obj.Address = r["Address"].ToString();
-                    obj.DOB = r["DOB"].ToString();
-                    obj.Mobile = r["Mobile"].ToString();
-                    obj.Email = r["Email"].ToString();
-                    obj.Gender = r["Sex"].ToString();
-                    obj.JoiningDate = r["JoiningDate"].ToString();
-                    lst.Add(obj);
-                }
-                model.lstVendor = lst;
-            }
-            return View(model);
-        }
-        [HttpPost]
-        [ActionName("VendorListForAdmin")]
-        public ActionResult VendorListForAdmin(Admin model)
-        {
-            List<Admin> lst = new List<Admin>();
-            model.FromDate = string.IsNullOrEmpty(model.FromDate) ? null : Common.ConvertToSystemDate(model.FromDate, "dd/MM/yyyy");
-            model.ToDate = string.IsNullOrEmpty(model.ToDate) ? null : Common.ConvertToSystemDate(model.ToDate, "dd/MM/yyyy");
-            DataSet ds = model.GetVendorList();
-            if (ds != null && ds.Tables[0].Rows.Count > 0 && ds.Tables.Count > 0)
-            {
-                foreach (DataRow r in ds.Tables[0].Rows)
-                {
-                    Admin obj = new Admin();
-                    obj.FK_UserId = r["PK_UserId"].ToString();
-                    obj.LoginId = r["LoginId"].ToString();
-                    obj.Password = Crypto.Decrypt(r["Password"].ToString());
-                    obj.Name = r["Name"].ToString();
-                    obj.Address = r["Address"].ToString();
-                    obj.DOB = r["DOB"].ToString();
-                    obj.Mobile = r["Mobile"].ToString();
-                    obj.Email = r["Email"].ToString();
-                    obj.Gender = r["Sex"].ToString();
-                    obj.JoiningDate = r["JoiningDate"].ToString();
-                    lst.Add(obj);
-                }
-                model.lstVendor = lst;
-            }
-            return View(model);
-        }
+            private readonly ILogger<AdminController> _logger;
+            private readonly List<string> _admins = new();
 
-        public ActionResult BillEntry(Admin model, string BillId, string PaymentId)
-        {
-            #region Shop
-            List<SelectListItem> ddlShop = new List<SelectListItem>();
-            DataSet ds1 = model.GetShopNameDetails();
-            if (ds1 != null && ds1.Tables.Count > 0 && ds1.Tables[0].Rows.Count > 0)
+            public AdminController(ILogger<AdminController> logger)
             {
-                int count = 0;
-                foreach (DataRow r in ds1.Tables[0].Rows)
-                {
-                    if (count == 0)
-                    {
-                        ddlShop.Add(new SelectListItem { Text = "Select Shop", Value = "0" });
-                    }
-                    ddlShop.Add(new SelectListItem { Text = r["ShopName"].ToString(), Value = r["Pk_ShopId"].ToString() });
-                    count++;
-                }
-            }
-            ViewBag.ddlShop = ddlShop;
-            #endregion
-            #region Customer
-            List<SelectListItem> ddlcustomer = new List<SelectListItem>();
-            DataSet ds = model.GetCustomerDetails();
-            if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
-            {
-                int count = 0;
-                foreach (DataRow r in ds.Tables[0].Rows)
-                {
-                    if (count == 0)
-                    {
-                        ddlcustomer.Add(new SelectListItem { Text = "Select Customer", Value = "0" });
-                    }
-                    ddlcustomer.Add(new SelectListItem { Text = r["CustomerName"].ToString(), Value = r["PK_UserId"].ToString() });
-                    count++;
-                }
-            }
-            ViewBag.ddlcustomer = ddlcustomer;
-            #endregion
-
-            if(BillId != null && PaymentId != null)
-            {
-                model.BillId = BillId;
-                model.Pk_BillPaymentId = PaymentId;
-                model.BillDate = string.IsNullOrEmpty(model.BillDate) ? null : Common.ConvertToSystemDate(model.BillDate, "dd/MM/yyyy");
-                DataSet ds2 = model.GetBillDetails();
-                if (ds2 != null && ds2.Tables.Count > 0 && ds2.Tables[0].Rows.Count > 0)
-                {
-                    model.ShopId = ds2.Tables[0].Rows[0]["Fk_Shopid"].ToString();
-                    model.LoginId = ds2.Tables[0].Rows[0]["Name"].ToString();
-                    model.Mobile = ds2.Tables[0].Rows[0]["Mobile"].ToString();
-                    model.BillNo = ds2.Tables[0].Rows[0]["BillNo"].ToString();
-                    model.NoOfPiece = ds2.Tables[0].Rows[0]["NoOfPiece"].ToString();
-                    model.DeliveredPiece = ds2.Tables[0].Rows[0]["DeliveredPiece"].ToString();
-                    model.RemainingPiece = ds2.Tables[0].Rows[0]["RemainingPiece"].ToString();
-                    model.OriginalPrice = ds2.Tables[0].Rows[0]["OriginalPrice"].ToString();
-                    model.FinalPrice = ds2.Tables[0].Rows[0]["FinalAmount"].ToString();
-                    model.Advance = ds2.Tables[0].Rows[0]["AdavanceAmount"].ToString();
-                    model.RemainningBalance = ds2.Tables[0].Rows[0]["RemainingBalance"].ToString();
-                    model.BillDate = ds2.Tables[0].Rows[0]["BillDate"].ToString();
-                    model.Status = ds2.Tables[0].Rows[0]["Status"].ToString();
-                }
+            _logger = logger;
             }
 
-            List<SelectListItem> Status = Common.BindStatus();
-            ViewBag.BindStatus = Status;
-            return View(model);
-        }
-
-        [HttpPost]
-        [ActionName("BillEntry")]
-        [OnAction(ButtonName = "SaveBill")]
-        public ActionResult BillEntryAction(Admin model)
-        {
-            try
+            public bool IsAdmin(string login)
             {
-                model.BillDate = string.IsNullOrEmpty(model.BillDate) ? null : Common.ConvertToSystemDate(model.BillDate, "dd/MM/yyyy");
-                model.AddedBy = Session["Pk_EmployeeId"].ToString();
-                DataSet ds = model.SaveBillEntry();
-                if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            return _admins.Contains(login);
+            }
+
+            public void AddAdmin(string login)
+            {
+                if (!_admins.Contains(login))
                 {
-                    if (ds.Tables[0].Rows[0][0].ToString() == "1")
-                    {
-                        TempData["BillEntry"] = "Bill Entry saved Successfully !!";
-                    }
-                    else if (ds.Tables[0].Rows[0][0].ToString() == "0")
-                    {
-                        TempData["BillEntry"] = ds.Tables[0].Rows[0]["ErrorMessage"].ToString();
-                    }
-                }
-                else
-                {
-                    TempData["BillEntry"] = ds.Tables[0].Rows[0]["ErrorMessage"].ToString();
+                    _admins.Add(login);
+                    _logger.LogWarning("Added login {} as an admin", login);
                 }
             }
-            catch (Exception ex)
-            {
-                TempData["BillEntry"] = ex.Message;
-            }
-            return RedirectToAction("BillEntry", "Admin");
-        }
-
-        public ActionResult BillList(Admin model, string LoginId)
-        {
-
-            List<Admin> lst = new List<Admin>();
-            if (LoginId != "")
-            {
-                model.LoginId = LoginId;
-            }
-            model.FromDate = string.IsNullOrEmpty(model.FromDate) ? null : Common.ConvertToSystemDate(model.FromDate, "dd/MM/yyyy");
-            model.ToDate = string.IsNullOrEmpty(model.ToDate) ? null : Common.ConvertToSystemDate(model.ToDate, "dd/MM/yyyy");
-          
-            DataSet ds = model.GetBillDetails();
-            if (ds != null && ds.Tables[0].Rows.Count > 0 && ds.Tables.Count > 0)
-            {
-                foreach (DataRow r in ds.Tables[0].Rows)
-                {
-                    Admin obj = new Admin();
-                    obj.BillId = r["Pk_BillId"].ToString();
-                    obj.Pk_BillPaymentId = r["Pk_BillPaymentId"].ToString();
-                    obj.Name = r["Name"].ToString();
-                    obj.Mobile = r["Mobile"].ToString();
-                    obj.NoOfPiece = r["NoOfPiece"].ToString();
-                    //obj.DeliveredPiece = r["DeliveredPiece"].ToString();
-                    //obj.RemainingPiece = r["RemainingPiece"].ToString();
-                    obj.OriginalPrice = r["OriginalPrice"].ToString();
-                    obj.BillNo = r["BillNo"].ToString();
-                    obj.BillDate = r["BillDate"].ToString();
-                    obj.Advance = r["AdavanceAmount"].ToString();
-                    obj.RemainingPiece = r["RemainingPiece"].ToString();
-                    obj.DeliveredPiece = r["DeliveredPiece"].ToString();
-                    obj.GeneratedAmount = r["GeneratedAmount"].ToString();
-                    obj.GeneratedPiece = r["GeneratedPiece"].ToString();
-                    obj.Status = r["Status"].ToString();
-                    obj.Balance = Convert.ToDecimal(r["RemainingBalance"].ToString());
-                    lst.Add(obj);
-                }
-                model.lstList = lst;
-                ViewBag.NoOfPiece = double.Parse(ds.Tables[1].Rows[0]["TotalPiece"].ToString());
-                ViewBag.DeliveredPiece = ds.Tables[0].Compute("sum(DeliveredPiece)", "").ToString();
-                ViewBag.RemainingPiece = (Convert.ToInt32((ViewBag.NoOfPiece)) - Convert.ToInt32((ViewBag.DeliveredPiece))); 
-                ViewBag.OriginalPrice = double.Parse(ds.Tables[1].Rows[0]["TotalOriginalPrice"].ToString()).ToString("n2");
-                ViewBag.Advance = double.Parse(ds.Tables[0].Compute("sum(AdavanceAmount)", "").ToString()).ToString("n2");
-                ViewBag.Balance = (Convert.ToDecimal((ViewBag.OriginalPrice)) - Convert.ToDecimal((ViewBag.Advance)));
-            }
-            return View(model);
-        }
-        [HttpPost]
-        [ActionName("BillList")]
-        [OnAction(ButtonName = "btnSearch")]
-        public ActionResult BillListSearch(Admin model, string LoginId)
-        {
-
-            List<Admin> lst = new List<Admin>();
-            if (LoginId != "")
-            {
-                model.LoginId = LoginId;
-            }
-            model.FromDate = string.IsNullOrEmpty(model.FromDate) ? null : Common.ConvertToSystemDate(model.FromDate, "dd/MM/yyyy");
-            model.ToDate = string.IsNullOrEmpty(model.ToDate) ? null : Common.ConvertToSystemDate(model.ToDate, "dd/MM/yyyy");
-
-            DataSet ds = model.GetBillDetails();
-            if (ds != null && ds.Tables[0].Rows.Count > 0 && ds.Tables.Count > 0)
-            {
-                foreach (DataRow r in ds.Tables[0].Rows)
-                {
-                    Admin obj = new Admin();
-                    obj.BillId = r["Pk_BillId"].ToString();
-                    obj.Pk_BillPaymentId = r["Pk_BillPaymentId"].ToString();
-                    obj.Name = r["Name"].ToString();
-                    obj.Mobile = r["Mobile"].ToString();
-                    obj.NoOfPiece = r["NoOfPiece"].ToString();
-                    //obj.DeliveredPiece = r["DeliveredPiece"].ToString();
-                    //obj.RemainingPiece = r["RemainingPiece"].ToString();
-                    obj.OriginalPrice = r["OriginalPrice"].ToString();
-                    obj.BillNo = r["BillNo"].ToString();
-                    obj.BillDate = r["BillDate"].ToString();
-                    obj.Advance = r["AdavanceAmount"].ToString();
-                    obj.RemainingPiece = r["RemainingPiece"].ToString();
-                    obj.DeliveredPiece = r["DeliveredPiece"].ToString();
-                    obj.GeneratedAmount = r["GeneratedAmount"].ToString();
-                    obj.GeneratedPiece = r["GeneratedPiece"].ToString();
-                    obj.Status = r["Status"].ToString();
-                    obj.Balance = Convert.ToDecimal(r["RemainingBalance"].ToString());
-                    lst.Add(obj);
-                }
-                model.lstList = lst;
-                ViewBag.NoOfPiece = double.Parse(ds.Tables[1].Rows[0]["TotalPiece"].ToString());
-                ViewBag.DeliveredPiece = ds.Tables[0].Compute("sum(DeliveredPiece)", "").ToString();
-                ViewBag.RemainingPiece = (Convert.ToInt32((ViewBag.NoOfPiece)) - Convert.ToInt32((ViewBag.DeliveredPiece)));
-                ViewBag.OriginalPrice = double.Parse(ds.Tables[1].Rows[0]["TotalOriginalPrice"].ToString()).ToString("n2");
-                ViewBag.Advance = double.Parse(ds.Tables[0].Compute("sum(AdavanceAmount)", "").ToString()).ToString("n2");
-                ViewBag.Balance = (Convert.ToDecimal((ViewBag.OriginalPrice)) - Convert.ToDecimal((ViewBag.Advance)));
-            }
-            return View(model);
-        }
-        public ActionResult PrintBill(string BillId, string PaymentId)
-        {
-            List<Admin> lstbill = new List<Admin>();
-            Admin model = new Admin();
-            model.BillId = BillId;
-            model.Pk_BillPaymentId = PaymentId;
-            DataSet ds = model.PrintBill();
-            if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
-            {
-                ViewBag.CustomerName = ds.Tables[0].Rows[0]["Name"].ToString();
-                ViewBag.CustomerMobile = ds.Tables[0].Rows[0]["Mobile"].ToString();
-                //ViewBag.CustomerAddress = ds.Tables[0].Rows[0]["Address"].ToString();
-                //ViewBag.Email = ds.Tables[0].Rows[0]["Email"].ToString();
-                ViewBag.BillNo = ds.Tables[0].Rows[0]["BillNo"].ToString();
-
-                model.BillDate = ds.Tables[0].Rows[0]["BillDate"].ToString();
-                model.Advance = ds.Tables[0].Rows[0]["AdavanceAmount"].ToString();
-                model.NoOfPiece = ds.Tables[0].Rows[0]["NoOfPiece"].ToString();
-                model.OriginalPrice = ds.Tables[0].Rows[0]["OriginalPrice"].ToString();
-                model.Discount = ds.Tables[0].Rows[0]["Discount"].ToString();
-                model.FinalPrice = ds.Tables[0].Rows[0]["FinalAmount"].ToString();
-                lstbill.Add(model);
-            }
-            model.lstList = lstbill;
-
-            return View(model);
-        }
-        public ActionResult BillPayment(string BillId, string PaymentId)
-        {
-            Admin model = new Admin();
-            model.BillId = BillId;
-            model.Pk_BillPaymentId = PaymentId;
-            #region Shop
-            List<SelectListItem> ddlShop = new List<SelectListItem>();
-            DataSet ds1 = model.GetShopNameDetails();
-            if (ds1 != null && ds1.Tables.Count > 0 && ds1.Tables[0].Rows.Count > 0)
-            {
-                int count = 0;
-                foreach (DataRow r in ds1.Tables[0].Rows)
-                {
-                    if (count == 0)
-                    {
-                        ddlShop.Add(new SelectListItem { Text = "Select Shop", Value = "0" });
-                    }
-                    ddlShop.Add(new SelectListItem { Text = r["ShopName"].ToString(), Value = r["Pk_ShopId"].ToString() });
-                    count++;
-                }
-            }
-            ViewBag.ddlShop = ddlShop;
-            #endregion
-
-            List<SelectListItem> ItemStatus = Common.BindStatus();
-            ViewBag.ItemStatus = ItemStatus;
-
-            DataSet ds = model.GetBillDetails();
-            if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
-            {
-                model.ShopId = ds.Tables[0].Rows[0]["Fk_Shopid"].ToString();
-                model.BillId = ds.Tables[0].Rows[0]["Pk_BillId"].ToString();
-                model.FinalPrice = ds.Tables[0].Rows[0]["FinalAmount"].ToString();
-                model.RemainningBalance = ds.Tables[0].Rows[0]["RemainingBalance"].ToString();
-                //model.Balance = Convert.ToDecimal(ds.Tables[0].Rows[0]["RemainingBalance"].ToString());
-                model.NoOfPiece = ds.Tables[0].Rows[0]["NoOfPiece"].ToString();
-                model.OriginalPrice = ds.Tables[0].Rows[0]["OriginalPrice"].ToString();
-                model.BillNo = ds.Tables[0].Rows[0]["BillNo"].ToString();
-                //model.BillDate = ds.Tables[0].Rows[0]["BillDate"].ToString();
-               model.RemainingPiece = ds.Tables[0].Rows[0]["RemainingPiece"].ToString();
-                model.TotalDeliveredPiece = ds.Tables[0].Rows[0]["TotalDeliveredPiece"].ToString();
-                model.LoginId = ds.Tables[0].Rows[0]["Name"].ToString();
-                model.Mobile = ds.Tables[0].Rows[0]["Mobile"].ToString();
-                model.TotalPaid = ds.Tables[0].Rows[0]["TotalPaid"].ToString();
-                model.FK_UserId = ds.Tables[0].Rows[0]["Fk_UserId"].ToString();
-                model.Status = ds.Tables[0].Rows[0]["Status"].ToString();
-            }
-            return View(model);
-        }
-        [HttpPost]
-        [ActionName("BillPayment")]
-        [OnAction(ButtonName = "btnbill")]
-        public ActionResult BillPayment(Admin model)
-        {
-            try
-            {
-                model.AddedBy = Session["Pk_EmployeeId"].ToString();
-                DataSet ds = new DataSet();
-                ds = model.BillPayment();
-                if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
-                {
-                    if (ds.Tables[0].Rows[0][0].ToString() == "1")
-                    {
-                        TempData["BillEntry"] = "Payment Successfully !!";
-                    }
-                    else if (ds.Tables[0].Rows[0][0].ToString() == "0")
-                    {
-                        TempData["BillEntry"] = ds.Tables[0].Rows[0]["ErrorMessage"].ToString();
-                    }
-                }
-                else
-                {
-                    TempData["BillEntry"] = ds.Tables[0].Rows[0]["ErrorMessage"].ToString();
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["BillEntry"] = ex.Message;
-            }
-            return RedirectToAction("BillPayment", "Admin");
-        }
-
-        public ActionResult OrderRefund()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        [ActionName("OrderRefund")]
-        [OnAction(ButtonName = "Save")]
-        public ActionResult ActionOrderRefund(Admin model)
-        {
-            try
-            {
-                model.AddedBy = Session["Pk_EmployeeId"].ToString();
-                model.RefundDate = string.IsNullOrEmpty(model.RefundDate) ? null : Common.ConvertToSystemDate(model.RefundDate, "dd/MM/yyyy");
-                DataSet ds = model.OrderRefund();
-                if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
-                {
-                    if (ds.Tables[0].Rows[0]["msg"].ToString() == "1")
-                    {
-                        TempData["Order"] = "Order Refund saved Successfully !!";
-                    }
-                    else if (ds.Tables[0].Rows[0]["ErrorMessage"].ToString() == "0")
-                    {
-                        TempData["Order"] = ds.Tables[0].Rows[0]["ErrorMessage"].ToString();
-                    }
-                }
-                else
-                {
-                    TempData["Order"] = ds.Tables[0].Rows[0]["ErrorMessage"].ToString();
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["Order"] = ex.Message;
-            }
-            return RedirectToAction("OrderRefund", "Admin");
-        }
-
-        public ActionResult OrderRefundList(Admin model)
-        {
-            List<Admin> lst = new List<Admin>();
-            DataSet ds = model.GetOrderRefundDetails();
-            if (ds != null && ds.Tables[0].Rows.Count > 0 && ds.Tables.Count > 0)
-            {
-                foreach (DataRow r in ds.Tables[0].Rows)
-                {
-                    Admin obj = new Admin();
-                    obj.RefundId = r["Pk_RefundId"].ToString();
-                    obj.PieceName = r["PieceName"].ToString();
-                    obj.NoOfPiece = r["NoOfPiece"].ToString();
-                    obj.Mobile = r["Mobile"].ToString();
-                    obj.BillNo = r["BillNo"].ToString();
-                    obj.Balance = Convert.ToDecimal(r["Amount"].ToString());
-                    obj.RefundDate = r["RefundDate"].ToString();
-                    lst.Add(obj);
-                }
-                model.lstList = lst;
-            }
-            return View(model);
-        }
-
-        public ActionResult GetAvailableBill(string BillNo)
-        {
-            Admin obj = new Admin();
-            try
-            {
-                obj.BillNo = BillNo;
-                DataSet ds = obj.GetBill();
-                if (ds != null && ds.Tables[0].Rows.Count > 0 && ds.Tables.Count > 0)
-                {
-                    if (ds.Tables[0].Rows[0]["Msg"].ToString() == "1")
-                    {
-                        obj.NoOfPiece = ds.Tables[0].Rows[0]["AvailablePiece"].ToString();
-                        obj.Result = "yes";
-                    }
-                    else if (ds.Tables[0].Rows[0]["Msg"].ToString() == "0")
-                    {
-                        obj.NoOfPiece = "0";
-                        obj.Result = ds.Tables[0].Rows[0]["ErrorMessage"].ToString();
-                    }
-                }
-                else
-                {
-                    obj.NoOfPiece = "0";
-                    obj.Result = "no";
-                }
-            }
-            catch (Exception ex)
-            {
-                obj.Result = ex.Message;
-            }
-            return Json(obj, JsonRequestBehavior.AllowGet);
-        }
-
-        public ActionResult PrintOrderRefund(string RefundId)
-        {
-            Admin model = new Admin();
-            model.RefundId = RefundId;
-            DataSet ds = model.PrintOrderRefundBill();
-            if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
-            {
-                ViewBag.CustomerName = ds.Tables[0].Rows[0]["Name"].ToString();
-                ViewBag.CustomerMobile = ds.Tables[0].Rows[0]["Mobile"].ToString();
-                ViewBag.BillNo = ds.Tables[0].Rows[0]["BillNo"].ToString();
-                model.PieceName = ds.Tables[0].Rows[0]["PieceName"].ToString();
-                model.Mobile = ds.Tables[0].Rows[0]["Mobile"].ToString();
-                model.Balance = Convert.ToDecimal(ds.Tables[0].Rows[0]["Amount"].ToString());
-                model.NoOfPiece = ds.Tables[0].Rows[0]["ReturnPiece"].ToString();
-            }
-            return View(model);
-        }
-
-        [HttpPost]
-        [ActionName("BillEntry")]
-        [OnAction(ButtonName = "UpdateBill")]
-        public ActionResult UpdateBillEntry(Admin model, string BillId, string Pk_BillPaymentId)
-        {
-            try
-            {
-                if(BillId != null && Pk_BillPaymentId != null)
-                {
-                    model.BillId = BillId;
-                    model.Pk_BillPaymentId = Pk_BillPaymentId;
-                    model.AddedBy = Session["Pk_EmployeeId"].ToString();
-                    model.BillDate = string.IsNullOrEmpty(model.BillDate) ? null : Common.ConvertToSystemDate(model.BillDate, "dd/MM/yyyy");
-                    DataSet ds = model.UpdateBillEntry();
-                    if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
-                    {
-                        if (ds.Tables[0].Rows[0][0].ToString() == "1")
-                        {
-                            TempData["BillEntry"] = "Bill Details Updated Successfully !!";
-                        }
-                        else if (ds.Tables[0].Rows[0][0].ToString() == "0")
-                        {
-                            TempData["BillEntry"] = ds.Tables[0].Rows[0]["ErrorMessage"].ToString();
-                        }
-                    }
-                    else
-                    {
-                        TempData["BillEntry"] = ds.Tables[0].Rows[0]["ErrorMessage"].ToString();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["BillEntry"] = ex.Message;
-            }
-            return RedirectToAction("BillEntry", "Admin");
         }
     }
 }
